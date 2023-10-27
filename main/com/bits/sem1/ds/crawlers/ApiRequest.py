@@ -4,10 +4,10 @@ from requests.auth import HTTPBasicAuth
 ## Sample API calling function structure
 class Api:
     def get_api_data(self):
-        url = 'http://mobility427-outpost.trybmc.com:1026/'
+        url = ''
         api = '/api/version'
-        username = 'swpadmin'
-        password = 'J2ee911pw'
+        username = ''
+        password = ''
         auth = HTTPBasicAuth(username, password)
         response = {'',''}
         try:
