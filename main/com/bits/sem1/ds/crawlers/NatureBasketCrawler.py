@@ -6,6 +6,9 @@ import csv
 
 class NatureBasketCrawler:
     ## Function definition to get main content data
+
+    # base_dir = 'data\\raw'
+    base_dir = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw'
     def get_main_page_contents(self, uri):
         response = requests.get(uri)
         html = response.content
@@ -24,7 +27,7 @@ class NatureBasketCrawler:
 
     ## Function to get page wise data
     def get_page_data(self, uri):
-        res = requests.get(url+uri).content
+        res = requests.get(uri).content
         soup = BeautifulSoup(res, 'html.parser')
 
         item_cost_list = list()
@@ -39,10 +42,10 @@ class NatureBasketCrawler:
         return item_dict
 
     ## Function to write data in file in csv format, data is in list(tuple) format
-    def write_into_csv_file(self, item_name, data):
+    def write_into_csv_file(self, file_name, data):
         fields = ['Item', 'Cost']
-        fileName = item_name + '.csv'
-        with open(fileName, 'w', newline='', encoding='utf-8') as file:
+        item_file_name = self.base_dir + '\\' + file_name
+        with open(item_file_name, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
 
             writer.writerow(fields)
@@ -54,52 +57,26 @@ class NatureBasketCrawler:
 
 
 ## Sequential approach
-url = 'https://www.naturesbasket.co.in'
 
-response = requests.get(url)
-html = response.content
-soup = BeautifulSoup(html, 'html.parser')
+def remove_special_chars(name):
+    return name \
+        .translate({ord(c): None for c in string.whitespace}) \
+        .replace('&', '_and_') \
+        .replace(',', '_') \
+        .replace('@', '_') \
+        .replace('!', '_') \
+        .replace('#', '_') \
+        .replace('%', '_') \
+        .lower()
 
-headings = list()
-refs = list()
-itemMap = list()
-for h in soup.findAll('div', class_ = 'divSuperCategoryTitle'):
-    if(h != None):
-        head = h.get_text().lstrip('\n').rstrip('\n')
-        # headings.append(head)
-        ref = h.find('a')
-        if(ref != None):
-            href = ref['href']
-            # refs.append(href)
-            itemMap.append((head, href))
-
-print(itemMap)
-uri = itemMap[0][1]
-res = requests.get(url+uri).content
-soup = BeautifulSoup(res, 'html.parser')
-
-item_cost_list = list()
-for main_div in soup.findAll('div', class_='source_Class'):
-    product = main_div.findAll('div', class_='pro-bucket')
-    for p in product:
-        item = p.find('a').find('img')['alt']
-        # print(item)
-        item_cost = p.parent.find('span', class_='search_PSellingP').get_text()
-        item_cost_list.append((item, item_cost))
-
-# item_dict = dict((x, y) for x, y in item_cost_list)
-print(item_cost_list)
-# print(item_dict)
-fields = ['Item', 'Cost']
-fileName = itemMap[0][0].translate({ord(c): None for c in string.whitespace}).replace('&', '_and_').lower() + '.csv'
-print(fileName)
-
-# print(len(item_cost_list))
-with open(fileName, 'w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-
-    writer.writerow(fields)
-    for item in item_cost_list:
-        writer.writerow([item[0], item[1]])
-
-    file.close()
+base_url = 'https://www.naturesbasket.co.in'
+crawler = NatureBasketCrawler()
+itemMap = crawler.get_main_page_contents(base_url)
+for item in itemMap:
+    item_file_name = remove_special_chars(item[0]) + '.csv'
+    # item_file_name = item[0].translate({ord(c): None for c in string.whitespace}).replace('&', '_and_').replace(',', '_').lower() + '.csv'
+    print(item_file_name)
+    uri = base_url + item[1]
+    print(uri)
+    item_price = crawler.get_page_data(uri)
+    crawler.write_into_csv_file(item_file_name, item_price)

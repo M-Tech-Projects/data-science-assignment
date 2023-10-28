@@ -68,7 +68,7 @@ for item in cleaned_data:
         parsed_data1.append([product_name, weight, original_price, special_price])
 
 # Specify the CSV file name
-csv_file = 'Kiranamarket_data1.csv'
+csv_file = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\kiranamarket_data.csv'
 
 # Open the CSV file for writing
 with open(csv_file, 'w', newline='', encoding='utf-8') as file:
