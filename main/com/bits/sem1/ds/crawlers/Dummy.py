@@ -2,6 +2,7 @@ import string
 
 import requests
 from bs4 import BeautifulSoup
+import csv
 import pandas as pd
 
 class NatureBasketCrawler:
@@ -34,6 +35,9 @@ class NatureBasketCrawler:
         for main_div in soup.findAll('div', class_='source_Class'):
             product = main_div.findAll('div', class_='pro-bucket')
             for p in product:
+                parent = p.parent
+                x = parent.children
+                # print(x)
                 item = p.find('a').find('img')['alt']
                 item_cost = p.parent.find('span', class_='search_PSellingP').get_text()
                 item_cost_list.append((item, item_cost))
@@ -45,8 +49,15 @@ class NatureBasketCrawler:
     def write_into_csv_file(self, file_name, data):
         fields = ['Item', 'Cost']
         item_file_name = self.base_dir + '\\' + file_name
-        df = pd.DataFrame({'Item': data.keys(), 'Cost': data.values()})
-        df.to_csv(item_file_name, header=True)
+        with open(item_file_name, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+
+            writer.writerow(fields)
+            for item in data:
+                writer.writerow([item[0], item[1]])
+
+        file.close()
+
 
 
 ## Sequential approach
@@ -65,11 +76,27 @@ def remove_special_chars(name):
 base_url = 'https://www.naturesbasket.co.in'
 crawler = NatureBasketCrawler()
 itemMap = crawler.get_main_page_contents(base_url)
-for item in itemMap:
-    item_file_name = remove_special_chars(item[0]) + '.csv'
-    # item_file_name = item[0].translate({ord(c): None for c in string.whitespace}).replace('&', '_and_').replace(',', '_').lower() + '.csv'
-    print(item_file_name)
-    uri = base_url + item[1]
-    print(uri)
-    item_price = crawler.get_page_data(uri)
-    crawler.write_into_csv_file(item_file_name, item_price)
+print(itemMap)
+# for item in itemMap:
+#     item_file_name = remove_special_chars(item[0]) + '.csv'
+#     # item_file_name = item[0].translate({ord(c): None for c in string.whitespace}).replace('&', '_and_').replace(',', '_').lower() + '.csv'
+#     print(item_file_name)
+#     uri = base_url + item[1]
+#     print(uri)
+#     item_price = crawler.get_page_data(uri)
+#     crawler.write_into_csv_file(item_file_name, item_price)
+
+item_file_name = remove_special_chars(itemMap[0][0]) + '.csv'
+print(item_file_name)
+uri = base_url + itemMap[0][1]
+print(uri)
+item_price = crawler.get_page_data(uri)
+# crawler.write_into_csv_file(item_file_name, item_price)
+print(item_price)
+keys = item_price.keys()
+vals = item_price.values()
+data = {'sl': '', 'product': keys, 'price': vals}
+df = pd.DataFrame(data)
+print(df)
+# for key in keys:
+#     print(key + '\t' + item_price.get(key))
