@@ -39,11 +39,15 @@ class NatureBasketCrawler:
                 x = parent.children
                 # print(x)
                 item = p.find('a').find('img')['alt']
+                mrp = p.parent.find('span', class_='search_PMRP')
                 item_cost = p.parent.find('span', class_='search_PSellingP').get_text()
-                item_cost_list.append((item, item_cost))
+                item_mrp = mrp.get_text() if(mrp != None)  else item_cost
+                # print('Item: ' + item + '\tMRP: ' + str(item_mrp) + '\tOfferPrice: ' + item_cost)
+                item_cost_list.append({'Item': item, 'MRP': item_mrp, 'Offer':item_cost})
 
-        item_dict = dict((x, y) for x, y in item_cost_list)
-        return item_dict
+        # item_dict = dict((x, y) for x, y in item_cost_list)
+        return item_cost_list
+        # return item_dict
 
     ## Function to write data in file in csv format, data is in list(tuple) format
     def write_into_csv_file(self, file_name, data):
@@ -93,10 +97,11 @@ print(uri)
 item_price = crawler.get_page_data(uri)
 # crawler.write_into_csv_file(item_file_name, item_price)
 print(item_price)
-keys = item_price.keys()
-vals = item_price.values()
-data = {'sl': '', 'product': keys, 'price': vals}
-df = pd.DataFrame(data)
+# keys = item_price[0]
+# vals = item_price[2]
+# mrp = item_price[1]
+# data = {'product': item_price[0], 'mrp': item_price[1], 'offer': item_price[2]}
+df = pd.DataFrame(item_price)
 print(df)
 # for key in keys:
 #     print(key + '\t' + item_price.get(key))

@@ -36,16 +36,17 @@ class NatureBasketCrawler:
             for p in product:
                 item = p.find('a').find('img')['alt']
                 item_cost = p.parent.find('span', class_='search_PSellingP').get_text()
-                item_cost_list.append((item, item_cost))
+                mrp = p.parent.find('span', class_='search_PMRP')
+                item_mrp = mrp.get_text() if(mrp != None)  else item_cost
+                item_cost_list.append({'Item': item, 'MRP': item_mrp, 'Offer':item_cost})
 
-        item_dict = dict((x, y) for x, y in item_cost_list)
-        return item_dict
+        # item_dict = dict((x, y) for x, y in item_cost_list)
+        return item_cost_list
 
     ## Function to write data in file in csv format, data is in list(tuple) format
     def write_into_csv_file(self, file_name, data):
-        fields = ['Item', 'Cost']
         item_file_name = self.base_dir + '\\' + file_name
-        df = pd.DataFrame({'Item': data.keys(), 'Cost': data.values()})
+        df = pd.DataFrame(data)
         df.to_csv(item_file_name, header=True)
 
 
