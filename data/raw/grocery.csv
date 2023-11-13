@@ -1,29 +1,31 @@
-,Item,Cost
-0,Parsi Dairy Cows Ghee 1 L,MRP ₹1245
-1,Natures American Almonds 1Kg,MRP ₹1299
-2,Conscious Food Gir Cow Ghee 500Ml Jar, ₹2137.5
-3,Parsi Dairy Cows Ghee 500 Ml,MRP ₹650
-4,Conscious Food Desi A2 Cowghee 1L Bottle, ₹2080.5
-5,Healthy Alternatives Organic Walnut Kernel 500G Pouch,MRP ₹1399
-6,Dry Fruits Gift 400G Box,MRP ₹375
-7,Ha Bn Chilean Walnuts,MRP ₹625
-8,Colavita Extra Virgin Olive Oil 1L Bottle,MRP ₹2495
-9,Ha Bn Mamra Almonds,MRP ₹1200
-10,Conscious Food Wild Forest Honey 500G Jar, ₹456
-11,Medjoul Super Jumbo Dates,MRP ₹3440
-12,Borges Olive Oil Glass Bottle 1 L, ₹1170
-13,Healthy Alternatives Walnut Kernel 250G Pouch,MRP ₹768
-14,Natures Figs 250G Pouch,MRP ₹1119
-15,Borges Extra Virgin Olive Oil 2L Pet,MRP ₹2700
-16,Concious Food Desi Cow Ghee 500Ml Jar,MRP ₹1090
-17,Colavita Extra Virg Olive Oil Pet 500Ml,MRP ₹1495
-18,Ha Bn Anjeer Aaa,MRP ₹900
-19,Helthy Alternative Dates Medjoul 300G Box,MRP ₹649
-20,Borges Extra Virgin Olive Oil Pet 500Ml,MRP ₹1050
-21,Borges Extra Virgin Olive Oil Jar 250Ml, ₹364
-22,Healthy Alternatives Saudi Dates 500G Box,MRP ₹699
-23,Natures Cashew Whole 240 500G,MRP ₹999
-24,Ha Bn Khajoor Medjul,MRP ₹624.75
-25,Black And Green Avocado Oil 500Ml Bottle,MRP ₹1599
-26,Healthy Alternatives  Almond Flour 400G Pouch,MRP ₹1420
-27,Ajwa Dates,MRP ₹2560
+,Item,MRP,Offer
+0,Parsi Dairy Cows Ghee 1 L,MRP ₹1245,MRP ₹1245
+1,Parsi Dairy Cows Ghee 1 L,MRP ₹1245,MRP ₹1245
+2,Natures American Almonds 1Kg,MRP ₹1299,MRP ₹1299
+3,Conscious Food Gir Cow Ghee 500Ml Jar,₹2250, ₹2137.5
+4,Parsi Dairy Cows Ghee 500 Ml,MRP ₹650,MRP ₹650
+5,Parsi Dairy Cows Ghee 500 Ml,MRP ₹650,MRP ₹650
+6,Conscious Food Desi A2 Cowghee 1L Bottle,₹2190, ₹2080.5
+7,Healthy Alternatives Organic Walnut Kernel 500G Pouch,MRP ₹1399,MRP ₹1399
+8,Dry Fruits Gift 400G Box,MRP ₹375,MRP ₹375
+9,Ha Bn Chilean Walnuts,MRP ₹625,MRP ₹625
+10,Colavita Extra Virgin Olive Oil 1L Bottle,MRP ₹2495,MRP ₹2495
+11,Ha Bn Mamra Almonds,MRP ₹1200,MRP ₹1200
+12,Conscious Food Wild Forest Honey 500G Jar,₹480, ₹456
+13,Medjoul Super Jumbo Dates,MRP ₹3440,MRP ₹3440
+14,Borges Olive Oil Glass Bottle 1 L,₹1350, ₹1170
+15,Healthy Alternatives Walnut Kernel 250G Pouch,MRP ₹768,MRP ₹768
+16,Natures Figs 250G Pouch,MRP ₹1119,MRP ₹1119
+17,Borges Extra Virgin Olive Oil 2L Pet,MRP ₹2700,MRP ₹2700
+18,Concious Food Desi Cow Ghee 500Ml Jar,MRP ₹1090,MRP ₹1090
+19,Colavita Extra Virg Olive Oil Pet 500Ml,MRP ₹1495,MRP ₹1495
+20,Ha Bn Anjeer Aaa,MRP ₹900,MRP ₹900
+21,Helthy Alternative Dates Medjoul 300G Box,MRP ₹649,MRP ₹649
+22,Borges Extra Virgin Olive Oil Pet 500Ml,MRP ₹1050,MRP ₹1050
+23,Borges Extra Virgin Olive Oil Jar 250Ml,₹400, ₹364
+24,Healthy Alternatives Saudi Dates 500G Box,MRP ₹699,MRP ₹699
+25,Natures Cashew Whole 240 500G,MRP ₹999,MRP ₹999
+26,Ha Bn Khajoor Medjul,MRP ₹624.75,MRP ₹624.75
+27,Black And Green Avocado Oil 500Ml Bottle,MRP ₹1599,MRP ₹1599
+28,Healthy Alternatives  Almond Flour 400G Pouch,MRP ₹1420,MRP ₹1420
+29,Ajwa Dates,MRP ₹2560,MRP ₹2560
