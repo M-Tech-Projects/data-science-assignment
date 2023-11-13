@@ -47,7 +47,7 @@ class NatureBasketCrawler:
     def write_into_csv_file(self, file_name, data):
         item_file_name = self.base_dir + '\\' + file_name
         df = pd.DataFrame(data)
-        df.to_csv(item_file_name, header=True)
+        df.to_csv(item_file_name, index=False, header=True)
 
 
 ## Sequential approach
