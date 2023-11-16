@@ -38,6 +38,7 @@ class NatureBasketCrawler:
                 item_cost = p.parent.find('span', class_='search_PSellingP').get_text()
                 mrp = p.parent.find('span', class_='search_PMRP')
                 item_mrp = mrp.get_text() if(mrp != None)  else item_cost
+                item
                 item_cost_list.append({'Item': item, 'MRP': item_mrp, 'Offer':item_cost})
 
         # item_dict = dict((x, y) for x, y in item_cost_list)
@@ -73,4 +74,4 @@ for item in itemMap:
     uri = base_url + item[1]
     print(uri)
     item_price = crawler.get_page_data(uri)
-    crawler.write_into_csv_file(item_file_name, item_price)
+    # crawler.write_into_csv_file(item_file_name, item_price)
