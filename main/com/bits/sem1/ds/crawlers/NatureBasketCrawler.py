@@ -1,77 +1,187 @@
-import string
-
+# Import the necessary libraries
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
 
-class NatureBasketCrawler:
-    ## Function definition to get main content data
-
-    # base_dir = 'data\\raw'
-    base_dir = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw'
-    def get_main_page_contents(self, uri):
-        response = requests.get(uri)
-        html = response.content
-        soup = BeautifulSoup(html, 'html.parser')
-
-        itemMap = list()
-        for h in soup.findAll('div', class_ = 'divSuperCategoryTitle'):
-            if(h != None):
-                head = h.get_text().lstrip('\n').rstrip('\n')
-                ref = h.find('a')
-                if(ref != None):
-                    href = ref['href']
-                    itemMap.append((head, href))
-
-        return itemMap
-
-    ## Function to get page wise data
-    def get_page_data(self, uri):
-        res = requests.get(uri).content
-        soup = BeautifulSoup(res, 'html.parser')
-
-        item_cost_list = list()
-        for main_div in soup.findAll('div', class_='source_Class'):
-            product = main_div.findAll('div', class_='pro-bucket')
-            for p in product:
-                item = p.find('a').find('img')['alt']
-                item_cost = p.parent.find('span', class_='search_PSellingP').get_text()
-                mrp = p.parent.find('span', class_='search_PMRP')
-                item_mrp = mrp.get_text() if(mrp != None)  else item_cost
-                item
-                item_cost_list.append({'Item': item, 'MRP': item_mrp, 'Offer':item_cost})
-
-        # item_dict = dict((x, y) for x, y in item_cost_list)
-        return item_cost_list
-
-    ## Function to write data in file in csv format, data is in list(tuple) format
-    def write_into_csv_file(self, file_name, data):
-        item_file_name = self.base_dir + '\\' + file_name
-        df = pd.DataFrame(data)
-        df.to_csv(item_file_name, index=False, header=True)
+base_dir = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\\'
 
 
-## Sequential approach
+def soupproc(url,parsed_data1):
+    # Send an HTTP GET request to the URL
+    response = requests.get(url)
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Parse the HTML content of the webpage using BeautifulSoup
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Example: Extract the title of the webpage
+        title = soup.title.string
+        print(f"Title of the webpage: {title}")
+    else:
+        print("Failed to retrieve the webpage. Status code:", response.status_code)
 
-def remove_special_chars(name):
-    return name \
-        .translate({ord(c): None for c in string.whitespace}) \
-        .replace('&', '_and_') \
-        .replace(',', '_') \
-        .replace('@', '_') \
-        .replace('!', '_') \
-        .replace('#', '_') \
-        .replace('%', '_') \
-        .lower()
 
+    def split_sentence(sentence):
+        # Using the split() method to split the sentence into two halves
+        halves = sentence.split('|')
+
+        # Check if there are exactly two halves
+        if len(halves) == 2:
+            # Return the two halves
+            return halves
+        else:
+            # If there are not exactly two halves, return an error message
+            return "Error: The sentence does not contain exactly one '|' character."
+
+    # Example usage:
+    result = split_sentence(title)
+    website1 = result[1].strip()
+    catagory1 = result[0].strip()
+
+    title1 = soup.find_all('div',class_ = 'divSuperCategoryTitle')
+    catagory_title =[title.text.strip() for title in title1]
+    #print(catagory_title)
+
+    divs = soup.find_all('div',id = 'ctl00_ContentPlaceHolder1_divSearchData')
+    parsed_data = []
+    # Iterate through the div elements and add their contents to the array
+    for div in divs:
+        # Use div.get_text() to get the text content inside the div
+        parsed_data.append(div.get_text())
+    #print(parsed_data)
+
+    data = parsed_data
+    # Split the input into individual records by separating them based on "Add To Favourites"
+    records = data[0].split('Add To Favourites')[1:]
+    #print(records)
+
+    # Initialize lists to store parsed data
+    Online_Grocery_Site = []
+    Product_Catagory =[]
+    product_names = []
+    netweight = []
+    quantities = []
+    mrps = []
+    dmrps = []
+
+    import re
+    def split_product_info(line):
+        # Remove leading and trailing whitespaces
+        line = line.strip()
+
+        # Initialize variables
+        product = ""
+        quantity = ""
+        original_price = 0.0
+        discounted_price = 0.0
+
+        # Split the line based on whitespace
+        parts = line.split()
+
+        # Regular expression pattern to match quantity like "500Ml", "1L", etc.
+        quantity_pattern = re.compile(r'\b(\d+(\.\d+)?)\s*([a-zA-Z]+)\b')
+
+        # Iterate through parts to identify product, quantity, and price
+        for part in parts:
+            if part.startswith("MRP"):
+                # Set the flag to assign the next '₹' to discounted price
+                assign_to_discounted = True
+            elif part.startswith("₹"):
+                # Assign '₹' to either original or discounted price based on the flag
+                if assign_to_discounted:
+                    original_price = float(part[1:])
+                    assign_to_discounted = False
+                else:
+                    discounted_price = float(part[1:])
+            elif part == '1' and 'Pc' in parts:
+                # Skip '1' when it is part of '1 Pc -0+'
+                continue
+            elif part == 'Pc' in parts:
+                # Skip '1' when it is part of '1 Pc -0+'
+                continue
+            elif part == '-0+' in parts:
+                # Skip '1' when it is part of '1 Pc -0+'
+                continue
+            else:
+                # Check if the part matches the quantity pattern
+                match = quantity_pattern.match(part)
+                if match:
+                    # Assign the matched quantity
+                    quantity = match.group(0)
+                    # Remove the quantity part from the product name
+                    product += part[len(quantity):] + " "
+                else:
+                    # Assuming anything else is part of the product name
+                    product += part + " "
+
+        # Remove trailing whitespace from the product name
+        product = product.strip()
+        #print(discounted_price)
+        if discounted_price == 0.0:
+            discounted_price = original_price
+        #print(discounted_price)
+        return product, quantity, original_price, discounted_price
+
+    # Display the result
+    for line in records:
+        result = split_product_info(line)
+        if result:
+            website = website1
+            catagory = catagory1
+            product_name = result[0]
+            weight = result[1]
+            mrp = result[2]
+            dmrp = result[3]
+            Online_Grocery_Site.append(website)
+            Product_Catagory.append(catagory)
+            product_names.append(product_name)
+            netweight.append(weight)
+            mrps.append(mrp)
+            dmrps.append(dmrp)
+
+    import csv
+
+    # Specify the CSV file name
+    csv_file = base_dir + 'Naturebasket_data1.csv'
+
+    # Open the CSV file for writing
+    with open(csv_file, 'a', newline='',encoding='utf-8') as file:
+        writer = csv.writer(file)
+
+        # Write the data to the CSV file
+        for i in range(len(product_names)):
+            writer.writerow([Online_Grocery_Site[i],Product_Catagory[i],product_names[i], netweight[i], mrps[i],dmrps[i]])
+    print(f'Data has been saved to {csv_file}')
+    #print(parsed_data1)
+    return(parsed_data1)
+
+# Get sub urls from main page
 base_url = 'https://www.naturesbasket.co.in'
-crawler = NatureBasketCrawler()
-itemMap = crawler.get_main_page_contents(base_url)
-for item in itemMap:
-    item_file_name = remove_special_chars(item[0]) + '.csv'
-    # item_file_name = item[0].translate({ord(c): None for c in string.whitespace}).replace('&', '_and_').replace(',', '_').lower() + '.csv'
-    print(item_file_name)
-    uri = base_url + item[1]
-    print(uri)
-    item_price = crawler.get_page_data(uri)
-    # crawler.write_into_csv_file(item_file_name, item_price)
+def get_main_page_contents(uri):
+    response = requests.get(uri)
+    html = response.content
+    soup = BeautifulSoup(html, 'html.parser')
+
+    url_list = list()
+    for h in soup.findAll('div', class_ = 'divSuperCategoryTitle'):
+        if(h != None):
+            ref = h.find('a')
+            if(ref != None):
+                href = ref['href']
+                url_list.append(uri + href)
+
+    return url_list
+
+# Define the URL of the webpage you want to scrape
+urls = get_main_page_contents(base_url)
+
+
+import csv
+# Specify the CSV file name
+csv_file = base_dir + 'Naturebasket_data1.csv'
+# Open the CSV file for writing
+with open(csv_file, 'w', newline='', encoding='utf-8') as file:
+    writer = csv.writer(file)
+    # Write the header row
+    writer.writerow(['Online_Grocery_Site','Product_Catagory','Product_Name', 'Quantity', 'Original_Price', 'Discounted_Price'])
+parsed_data1 = []
+for url in urls:
+    soupproc(url,parsed_data1)
