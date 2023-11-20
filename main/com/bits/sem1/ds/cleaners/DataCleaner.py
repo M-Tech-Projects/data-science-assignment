@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 
 class DataCleaner:
@@ -22,39 +24,33 @@ class DataCleaner:
 
 
     def add_discount_col(self, df, mrp_col, offer_col, file_name):
-        discount = []
+        discount = list()
         df[mrp_col] = df[mrp_col].astype(float)
         df[offer_col] = df[offer_col].astype(float)
-        # size = df.size
-        # axis = df.axes
-        # data = df.loc[0].at[mrp_col]
-        # data = df.items
-        # print(f'Axis = {axis}')
-        # print(f'DataType = {type(data)}')
-        # print(f'Data = {data}')
-        # matrix = pd.to_numpy()
-        # print(f'Matrix = {matrix}')
-        # print(f'Data Size = {size}')
-        for index in df.index:
-            mrp_values = (df.loc[index, mrp_col])
-            offer_values = (df.loc[index, offer_col])
-            for i in range(0, len(mrp_values)):
-                diff = mrp_values[i] - offer_values
-                print(diff)
-            # discount = [(1 - offer_values[i]/mrp_values[i]) * 100 for i in range(len(mrp_values)]
-            # discount = (1 - offer_values/mrp_values) * 100
-            # print(f'MRP = {mrp_values}\t\t\tOffer = {offer_values}')
-            # print(f'Data Size = {len(mrp_values)}')
-            # for value in df.loc[index, ]
-            # name = f.removesuffix('.csv')
-            # df = pd.read_csv(raw_dir + f)
-        # Insert a column discount in %, in column 6
-        # df.insert(loc=6, column='Discount %', value=discount)
-        print()
-        # print(df.keys())
-        # df.assign(G = df['MRP'] - df['Offer'])
-        # df.to_csv(self.processed_dir + file_name)
-        # return df
+        mrp = df[mrp_col]
+        offer = df[offer_col]
+        size = offer.count()
+        for index in range(0, size):
+            dic = (1 - offer[index]/mrp[index]) * 100
+            discount.append(dic)
+
+        print(discount)
+        df.insert(5, 'Discount %', discount, allow_duplicates=True)
+        df.to_csv(self.processed_dir + file_name)
+
+    # ToDo - Not in use
+    def split_weight_unit(self, df, weight_col, product_name_col):
+        raw_weight = df[weight_col]
+        product_name = df[product_name_col]
+        weight = list()
+        unit = list()
+        # print(raw_weight)
+        for index in range(0, raw_weight.count()):
+            wt = raw_weight[index]
+            name = product_name[index]
+            alpha = re.findall()
+            print(f'Name = {name}\t\t\t\t\t\tweight = {wt}')
+
 
 
 raw_files = ['Naturebasket_data1.csv', 'Kiranamarket_data1.csv', 'JIOMArt_data1.csv']
@@ -106,5 +102,5 @@ cleaner.write_csv(nature_df, 'NatureBasket.csv')
 # format_price_col('MRP', nature_df, processed_dir + 'NatureBasket.csv')
 # format_price_col('Offer', nature_df, processed_dir + 'NatureBasket.csv')
 cleaner.add_discount_col(nature_df, 'Original_Price', 'Discounted_Price', 'NatureBasket.csv')
-# cleaner.add_discount_col(kirana_df, 'Original Price', 'Special Price', 'KiranaMarket.csv')
-# df.to_csv(processed_dir+'NatureBasket.csv')
+cleaner.add_discount_col(kirana_df, 'Original Price', 'Special Price', 'KiranaMarket.csv')
+# cleaner.split_weight_unit(nature_df, 'Quantity', 'Product_Name')
