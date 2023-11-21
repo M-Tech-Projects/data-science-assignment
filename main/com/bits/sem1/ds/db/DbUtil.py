@@ -3,19 +3,16 @@ import pandas as pd
 
 class DatabaseUtil:
 
+    connection = mysql.connector.connect(host='localhost', user='root', password='')
+    curser = connection.cursor()
+
     schema = 'mtech'
     table = 'Online_Grocery_Items'
-    # col_names = ['site', 'product_category', 'product_name', 'quantity', 'original_price', 'special_price', 'discount_percentage']
-
-    def __int__(self):
-        self.connection = mysql.connector.connect(host='localhost', user='root', password='Abhi$hek_1982')
 
     def create_table(self):
-        curser = self.connection.cursor()
-        # curser.execute('show databases')
         create_schema = f'CREATE SCHEMA IF NOT EXISTS {self.schema}'
-        curser.execute(create_schema)
-        curser.execute(f'use {self.schema}')
+        self.curser.execute(create_schema)
+        self.curser.execute(f'use {self.schema}')
 
         #Day to be any of 7 days on which data collected, say Wednesday
         create_table = f'CREATE TABLE IF NOT EXISTS {self.table} (' \
@@ -31,33 +28,48 @@ class DatabaseUtil:
                        f'PRIMARY KEY (`Id`)' \
                        f');'
 
-        curser.execute(create_table)
+        self.curser.execute(create_table)
 
-    # ToDo - Complete the implementation
-    def insert_data_into_table(self, read_file):
-        reader = pd.read_csv(read_file, index_col= 0, header=None)
-        cols = reader.columns
-        print(f'{cols}\t\t\t\t{reader[1].count()}')
+    def insert_data_into_table(self, df):
+        cols = df.columns
+        size = df[cols[0]].count()
 
-        for row in range(1, reader[1].count()):
-            for col in cols:
-                print(f'{reader[row].iloc[col]}')        #giving column values
-                # print(type(reader[i].iloc[i]))
-            print()
-                # print(reader.get(i).name)
+        web_data = df[cols[0]]
+        category_data = df[cols[1]]
+        name_data = df[cols[2]]
+        quantity_data = df[cols[3]]
+        mrp_data = df[cols[4]]
+        offer_data = df[cols[5]]
+        discount_data = df[cols[6]]
 
+        # We can add day on which data collected for now it is hard coded to Tuesday
+        day = 'Tuesday'
+        self.curser.execute(f'use {self.schema}')
+
+        insert_command = f'INSERT INTO {self.table} ' \
+                         f'(OnlineGrocerySite, ProductCategory, ProductName, Quantity, DayOfDeal, OriginalPrice, SpecialPrice, DiscountPercentage)' \
+                         f'VALUES '
+
+        for i in range(0, size):
+            values = f'(\'{self.remove_special_chars(web_data[i])}\', \'{self.remove_special_chars(category_data[i])}\', ' \
+                     f'\'{self.remove_special_chars(name_data[i])}\',\'{quantity_data[i]}\', ' \
+                     f'\'{day}\', {mrp_data[i]}, {offer_data[i]}, {discount_data[i]});'
+
+            print(f'{values}')
+            curser = self.connection.cursor()
+            curser.execute(insert_command + values)
+            curser.execute('commit')
+
+    def remove_special_chars(self, string):
+        return string\
+            .replace('\'', '_')
+
+
+## class def ends here
 util = DatabaseUtil()
 base_dir = 'C:\\GitDev\M.Tech.Assignments\data-science-assignment\data\\'
 raw_dir = base_dir + 'raw\\'
 processed_dir = base_dir + 'processed\\'
 
-util.insert_data_into_table(processed_dir + 'NatureBasket.csv')
-# for d in curser:
-#     print(d)
-# curser.execute('use sakila')
-# for x in curser:
-#     print(x)
-# result = curser.execute('select * from actor')
-# for r in curser:
-#     print(r)
-#
+nature_df = pd.read_csv(processed_dir + 'NatureBasket.csv')
+util.insert_data_into_table(nature_df)
