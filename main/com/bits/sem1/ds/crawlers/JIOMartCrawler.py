@@ -1,6 +1,54 @@
 # Import the necessary libraries
+import calendar
+import re
+from datetime import date
+
 import requests
+import pandas as pd
 from bs4 import BeautifulSoup
+
+def extract_weight_and_unit(raw_weight):
+    rw_arr = add_space_in_weight_unit(raw_weight).split()
+    weight = float(rw_arr[0])
+    unit = rationalize_unit(rw_arr[1])
+
+    return (weight, unit)
+
+
+def rationalize_unit(raw_unit):
+    unit = ''
+    match raw_unit.lower():
+        case 'g':
+            unit = 'gm'
+        case 'gm':
+            unit = 'gm'
+        case 'l':
+            unit = 'Litre'
+        case 'ltr':
+            unit = 'Litre'
+        case 'litre':
+            unit = 'Litre'
+        case 'ml':
+            unit = 'ml'
+        case 'kg':
+            unit = 'Kg'
+        case 'pc':
+            unit = 'Pc/Box'
+        case _:
+            unit = 'Pc/Box'
+
+    return unit
+
+def add_space_in_weight_unit(raw_weight):
+    if(len(raw_weight.split()) < 2 ):
+        nums = re.findall(r'\d+', raw_weight)
+        num = '.'.join(nums)
+        unit = raw_weight.replace(f'{num}', '')
+        weight = [num, unit]
+        wt = ' '.join(weight)
+        return wt
+    else:
+        return raw_weight
 
 def soupproc2(url,parsed_data):
     # Send an HTTP GET request to the URL
@@ -29,21 +77,40 @@ def soupproc2(url,parsed_data):
     product_names = []
     weights = []
     original_prices = []
-    discounted_prices = []
+    # discounted_prices = []
     discount_percentages = []
     import re
+    day = calendar.day_name[date.today().weekday()]
     for product_string in input_data:
         pattern = re.compile(r'^(.*?)\s+(\d+\s*[gG])\s+₹(\d+\.\d{2})\s+₹(\d+\.\d{2})\s+(\d+)%\s+OFF\s+.*$')
         match = pattern.match(product_string)
         if match:
             product_name = match.group(1).strip()
-            weight = match.group(2).strip()
+            raw_weight = match.group(2).strip()
+            qty = extract_weight_and_unit(raw_weight)
+            weight = qty[0]
+            unit = rationalize_unit(qty[1])
             discounted_price = match.group(3).strip()
+            discounted_price = float(discounted_price)
             original_price = match.group(4).strip()
+            original_price = float(original_price)
             discount_percentage = match.group(5).strip()
-            website = 'JIO Market'
+            website = 'jiomart.com'
             titlename = title[0:22]
-            parsed_data.append([website, titlename, product_name, weight, original_price, discounted_price, discount_percentage])
+            json = {
+                'Online_Grocery_Site': website,
+                'Product_Catagory': titlename,
+                'Product_Name': product_name,
+                'Weight': weight,
+                'Unit': unit,
+                'DayOfDeal': day,
+                'Original_Price': original_price,
+                'Discounted_Price': discounted_price,
+                'Discount %': discount_percentage
+            }
+            # print(json)
+            # parsed_data.append([website, titlename, product_name, weight, unit, day, original_price, discounted_price, discount_percentage])
+            parsed_data.append(json)
     return(parsed_data)
 
 urls = ['https://www.jiomart.com/c/groceries/snacks-branded-foods/biscuits-cookies/11',
@@ -80,27 +147,30 @@ urls = ['https://www.jiomart.com/c/groceries/snacks-branded-foods/biscuits-cooki
 
 import csv
 # Specify the CSV file name
-csv_file1 = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\JIOMart_data1.csv'
+csv_file1 = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\JIOMart_data2.csv'
 # Open the CSV file for writing
-with open(csv_file1, 'w', newline='', encoding='utf-8') as file:
-    pass
+# with open(csv_file1, 'w', newline='', encoding='utf-8') as file:
+#     pass
 parsed_data = []
 for url in urls:
-    soupproc2(url,parsed_data)
+    soupproc2(url, parsed_data)
 
 #print(parsed_data)
 import csv
 # Specify the CSV file name
-csv_file = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\JIOMart_data1.csv'
+csv_file = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\JIOMart_data2.csv'
+df = pd.DataFrame(parsed_data)
+df.to_csv(csv_file, index=False, header=True)
+
 # Open the CSV file for writing
-with open(csv_file, 'a', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-    # Write the header row
-    #writer.writerow(['Website','Product Catagory','Product Name', 'Weight', 'Original Price', 'Special Price'])
-    writer.writerow(['Website','Product Catagory','Product Name', 'Weight', 'Original Price', 'Special Price','Discount'])
-    # Write the parsed data to the CSV file
-    writer.writerows(parsed_data)
-    file.close()
+# with open(csv_file, 'a', newline='', encoding='utf-8') as file:
+#     writer = csv.writer(file)
+#     # Write the header row
+#     #writer.writerow(['Website','Product Catagory','Product Name', 'Weight', 'Original Price', 'Special Price'])
+#     writer.writerow(['Online_Grocery_Site','Product_Category','Product_Name', 'Weight', 'Unit', 'DayOfDeal', 'Original_Price', 'Special_Price','Discount'])
+#     # Write the parsed data to the CSV file
+#     writer.writerows(parsed_data)
+#     file.close()
 
 #import csv
 # Specify the CSV file name

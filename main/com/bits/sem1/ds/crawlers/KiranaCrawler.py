@@ -1,83 +1,219 @@
+# Import the necessary libraries
+import calendar
+import re
+from datetime import date
+
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-# Define the URL of the webpage you want to scrape
-url = 'https://www.kiranamarket.com/categories/coffee-tea-beverages?product_list_limit=36'  # Replace with the URL of the webpage you want to scrape
+base_dir = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\\'
+file_name = 'Kiranamarket_data2.csv'
+base_url = 'https://www.kiranamarket.com'
+page_size = f'?p=1&product_list_limit=36'
+items = list()
 
-# Send an HTTP GET request to the URL
-response = requests.get(url)
 
-# Check if the request was successful (status code 200)
-if response.status_code == 200:
-    # Parse the HTML content of the webpage using BeautifulSoup
-    soup = BeautifulSoup(response.text, 'html.parser')
+def get_child_urls_from_main_page_contents(url):
+    def valid_url(url):
+        if (url.startswith('https')):
+            return True
+        else:
+            return False
+
+    # Send an HTTP GET request to the URL
+    response = requests.get(url)
+    html = response.content
+    soup = BeautifulSoup(html, 'html.parser')
+
+    url_list = list()
 
     # Example: Extract the title of the webpage
     title = soup.title.string
     print(f"Title of the webpage: {title}")
 
+    # for div in soup.findAll('div', class_ = 'owl-item active'):
+    for div in soup.findAll('li', class_='product-category product-col'):
+        if (div != None):
+            ref = div.find('a')
+            if (ref != None):
+                href = ref['href']
+                if (valid_url(href)):
+                    url_list.append((href))
 
+    return url_list
 
-else:
-    print("Failed to retrieve the webpage. Status code:", response.status_code)
-#print(soup.prettify())
+def calculate_page(url):
+    print(f'URL = {url}')
+    response = requests.get(url)
+    html = response.content
+    soup = BeautifulSoup(html, 'html.parser')
 
-divs = soup.find_all('div',class_ = 'product details product-item-details')
-parsed_data = []
-cleaned_data =[]
-parsed_data1 = []
-# Iterate through the div elements and add their contents to the array
-for div in divs:
-    # Use div.get_text() to get the text content inside the div
-    parsed_data.append(div.get_text())
-    # Replace '\n' with 'null' in the string
-    cleaned_data = [s.replace('\n', ' ') for s in parsed_data]
-#print(cleaned_data)
+    # Example: Extract the title of the webpage
+    next_page = soup \
+        .find('div', id='layer-product-list') \
+        .find('div', class_='pages') \
+        .find('ul', class_='items pages-items') \
+        .find('li', class_='item pages-item-next')
 
-data = cleaned_data
-parsed_data = []
+    if(next_page != None):
+        next_page = next_page.find('a')['href']
+    print(f'NextPage = {next_page}')
 
-for item in data:
-    item_parts = item.split('\r')
-    cleaned_parts = [part.strip() for part in item_parts if part.strip()]
-    parsed_data.append(cleaned_parts)
+    return next_page
 
-# Printing the parsed data
-#for item in parsed_data:
-#print(item)
+day = calendar.day_name[date.today().weekday()]
 
-import re
-import csv
+def get_page_data(url):
+    # Send an HTTP GET request to the URL
+    print(f'URL = {url}')
+    response = requests.get(url)
+    html = response.content
+    soup = BeautifulSoup(html, 'html.parser')
 
-# Define a regular expression pattern to match product name and price
-pattern = r'^(.*?)\s+Rating:.*?₹([\d.]+)\s+Special Price  ₹([\d.]+)'
+    # Example: Extract the title of the webpage
+    title = soup.title.string
+    print(f"Title of the inner webpage: {title}")
+    category = title.split('-')[0]
+    website = title.split('|')[1].lstrip()
+    print(category)
+    print(website)
 
-for item in cleaned_data:
-    match = re.match(pattern, item)
-    if match:
-        product_name = match.group(1).strip()
-        product_parts = product_name.split(',')
-        if len(product_parts) == 2:
-            product_name = product_parts[0].strip()
-            weight = product_parts[1].strip()
+    # Content extraction for current page
+    next_page = soup \
+        .find('div', id='layer-product-list') \
+        .find('div', class_='pages') \
+        .find('ul', class_='items pages-items') \
+        .find('li', class_='item pages-item-next')
+    if(next_page != None):
+        next_page = next_page.find('a')['href']
+    print(f'NextPage = {next_page}')
+    item_name = ''
+    for div in soup.findAll('div', class_='price-box price-final_price'):
+        # print(price_div)
+        item = div.parent.find('strong', class_='product name product-item-name')
+        unit = ''
+        weight = ''
+        if (item != None):
+            item = item.find('a').get_text().lstrip().rstrip()
+            # Extract Product name, weight and unit
+            names = item.split()
+            item_name = ' '.join(names[0:-1]).removesuffix(',')
+            size = len(names)
+            # weight = names[-1]
+            alpha = re.findall('(\d+)', names[-1])
+            if (len(alpha) == 0):
+                unit = names[-1]
+                weight = names[-2]
+                item_name = ' '.join(names[0:-2]).removesuffix(',').removesuffix('-').lstrip().rstrip()
+            elif (len(alpha) == 2):
+                weight = float('.'.join(alpha))
+                unit = names[-1].split('.'.join(alpha))[-1]
+            elif (len(alpha) == 1):
+                weight = float(''.join(alpha))
+                unit = names[-1].split('.'.join(alpha))[-1]
+            # print(f'Name: {item_name}\t\t\tweight: {weight}\t\t\tunit: {unit}')
+            unit = rationalize_unit(unit)
         else:
-            product_name = product_parts
-            weight = "N/A"
-        original_price = match.group(2)
-        special_price = match.group(3)
-        parsed_data1.append([product_name, weight, original_price, special_price])
+            item = ''
+        # print(f'Name: {item}')
+        prices_new_label = ''
+        prices_old = 0
+        prices_new = 0
+        try:
+            price_div = div.find_all_next('span', class_='price-container price-final_price tax weee')
+            # prices_new = type(price_div)
+            prices_new = price_div[0].find('span', class_='price-wrapper')['data-price-amount']
+            prices_new_label = price_div[0].find('span', class_='price-label')
+            prices_label = price_div[1].find('span', class_='price-label')
+            prices_old = 0
+            if (prices_label != None):
+                prices_label = prices_label.get_text()
+                prices_old = price_div[1].find('span', class_='price-wrapper')['data-price-amount']
+            else:
+                prices_old = prices_new
+            if (prices_new_label != None):
+                prices_new_label = prices_new_label.get_text()
+                # prices_old = price_div[1].find('span', class_='price-wrapper')['data-price-amount']
+        except:
+            print(f'Error in extracting page data... Continuing...')
+            pass
+        # else:
+        #     prices_old = prices_new
+        # print(f'{prices_new_label}\t\t{prices_new}\t\t{prices_label}\t\t{prices_old}')
+        discount = 0
+        prices_old = float(prices_old)
+        prices_new = float(prices_new)
+        if (prices_new_label != None):
+            discount = (1 - prices_old / prices_new) * 100
+        # print(prices_old)
+        print()
+        json = {
+            'Online_Grocery_Site': website,
+            'Product_Category': category,
+            'Product_Name': item_name,
+            'Weight': weight,
+            'Unit': unit,
+            'DayOfDeal': day,
+            'Original_Price': prices_new,
+            'Special_Price': prices_old,
+            'Discount': discount
+        }
+        if(unit != ''):
+            items.append(json)
+            print(f'JSON: {json}')
 
-# Specify the CSV file name
-csv_file = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\kiranamarket_data.csv'
+    next_url = calculate_page(url)
+    if(next_url != None):
+        get_page_data(next_url)
 
-# Open the CSV file for writing
-with open(csv_file, 'w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
 
-    # Write the header row
-    writer.writerow(['Product Name', 'Weight', 'Original Price', 'Special Price'])
 
-    # Write the parsed data to the CSV file
-    writer.writerows(parsed_data1)
+def extract_weight_and_unit(raw_weight):
+    rw_arr = raw_weight.split()
+    weight = rw_arr[0]
+    unit = rationalize_unit(rw_arr[1])
 
-print(f'Data has been saved to {csv_file}')
+    return (weight, unit)
+
+
+def rationalize_unit(raw_unit):
+    unit = ''
+    match raw_unit.lower():
+        case 'g':
+            unit = 'gm'
+        case 'gm':
+            unit = 'gm'
+        case 'l':
+            unit = 'Litre'
+        case 'ltr':
+            unit = 'Litre'
+        case 'litre':
+            unit = 'Litre'
+        case 'ml':
+            unit = 'ml'
+        case 'kg':
+            unit = 'Kg'
+        case 'pc':
+            unit = 'Pc/Box'
+        case _:
+            unit = 'Pc/Box'
+
+    return unit
+
+
+def write_to_csv(file_name, data):
+    item_file_name = base_dir + file_name
+    df = pd.DataFrame(data)
+    df.to_csv(item_file_name, index=False, header=True)
+
+
+urls = get_child_urls_from_main_page_contents(base_url)
+print(f'URLS = {urls}')
+
+for url in urls:
+    get_page_data(url + page_size)
+
+write_to_csv(file_name, items)
+
+print(f'Crawling done for {base_url} and csv file is stored in {base_dir}. Total items = {len(items )}')
