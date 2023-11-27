@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 
 base_dir = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\\'
-file_name = 'Naturebasket_data2.csv'
+file_name = 'Naturebasket_test_data.csv'
 base_url = 'https://www.naturesbasket.co.in'
 
 
@@ -52,18 +52,40 @@ class NatureBasketCrawler:
             for pd in product_divs:
                 try:
                     product_name = self.remove_special_chars(pd.find('a').find('img')['alt'].lstrip().rstrip())
-                    qty = pd.find('div', class_='search_PSelectedSize')  # productvariantdiv
+                    qty = pd.find('div', class_='search_PSelectedSize')
                     if (qty == None):
                         qty = pd.find('span', class_='search_PSelectedSize')
-                    mrp = pd.find('div', class_='productlist-price').find('span',
-                                                                          class_='search_PSellingP').get_text().split()[
-                        1]
+                    prices = pd.find('div', class_='productlist-price')
+                    offer_span = prices.find('span', class_='search_PSellingP')
+                    mrp_span = prices.find('span', class_='search_PMRP')
+                    if(offer_span != None):
+                        offer_span = offer_span.get_text().split()
+                    else:
+                        offer_span = offer_span.get_text
+                    if(mrp_span != None):
+                        mrp_span = mrp_span.get_text().split()
+                    else:
+                        mrp_span = offer_span
+                    mrp = 0
+                    offer_price = 0
+                    if(len(offer_span) == 1):
+                        offer_price = float(offer_span[0][1:])
+                    else:
+                        offer_price = float(offer_span[1][1:])
+                    if(len(mrp_span) == 0):
+                        mrp = mrp_span
+                    elif(len(mrp_span) == 1):
+                        mrp = float(mrp_span[0][1:])
+
                     qty = self.extract_weight_and_unit(qty.get_text())
                     weight = qty[0]
                     unit = qty[1]
-                    currency = mrp[:1]
-                    original_price = float(mrp[1:])
-                    offer_price = float(original_price)
+
+                    if(mrp == 0):
+                        original_price = float(offer_price)
+                    else:
+                        original_price = float(mrp)
+
                     discount_percent = (1 - offer_price / original_price) * 100
                     json = {
                         'Online_Grocery_Site': website,
@@ -78,8 +100,8 @@ class NatureBasketCrawler:
                     }
                     # print(json)
                     parsed_data.append(json)
-                except:
-                    print(f'Exception occurred, passing...')
+                except Exception as e:
+                    print(f'Exception class: {e.__class__}\nException occurred: {e}, passing...')
                     pass
 
         return parsed_data
