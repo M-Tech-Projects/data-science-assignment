@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 
 base_dir = 'C:\GitDev\M.Tech.Assignments\data-science-assignment\data\\raw\\'
-file_name = 'Kiranamarket_data2.csv'
+file_name = 'Kiranamarket_data3.csv'
 base_url = 'https://www.kiranamarket.com'
 page_size = f'?p=1&product_list_limit=36'
 items = list()
@@ -30,7 +30,7 @@ def get_child_urls_from_main_page_contents(url):
 
     # Example: Extract the title of the webpage
     title = soup.title.string
-    print(f"Title of the webpage: {title}")
+    # print(f"Title of the webpage: {title}")
 
     # for div in soup.findAll('div', class_ = 'owl-item active'):
     for div in soup.findAll('li', class_='product-category product-col'):
@@ -44,7 +44,7 @@ def get_child_urls_from_main_page_contents(url):
     return url_list
 
 def calculate_page(url):
-    print(f'URL = {url}')
+    # print(f'URL = {url}')
     response = requests.get(url)
     html = response.content
     soup = BeautifulSoup(html, 'html.parser')
@@ -58,7 +58,7 @@ def calculate_page(url):
 
     if(next_page != None):
         next_page = next_page.find('a')['href']
-    print(f'NextPage = {next_page}')
+    # print(f'NextPage = {next_page}')
 
     return next_page
 
@@ -66,18 +66,18 @@ day = calendar.day_name[date.today().weekday()]
 
 def get_page_data(url):
     # Send an HTTP GET request to the URL
-    print(f'URL = {url}')
+    # print(f'URL = {url}')
     response = requests.get(url)
     html = response.content
     soup = BeautifulSoup(html, 'html.parser')
 
     # Example: Extract the title of the webpage
     title = soup.title.string
-    print(f"Title of the inner webpage: {title}")
+    # print(f"Title of the inner webpage: {title}")
     category = title.split('-')[0]
     website = title.split('|')[1].lstrip()
-    print(category)
-    print(website)
+    # print(category)
+    # print(website)
 
     # Content extraction for current page
     next_page = soup \
@@ -87,7 +87,7 @@ def get_page_data(url):
         .find('li', class_='item pages-item-next')
     if(next_page != None):
         next_page = next_page.find('a')['href']
-    print(f'NextPage = {next_page}')
+    # print(f'NextPage = {next_page}')
     item_name = ''
     for div in soup.findAll('div', class_='price-box price-final_price'):
         # print(price_div)
@@ -122,21 +122,25 @@ def get_page_data(url):
         prices_new = 0
         try:
             price_div = div.find_all_next('span', class_='price-container price-final_price tax weee')
-            # prices_new = type(price_div)
+            prices_new = 0
+            prices_label = None
             prices_new = price_div[0].find('span', class_='price-wrapper')['data-price-amount']
             prices_new_label = price_div[0].find('span', class_='price-label')
-            prices_label = price_div[1].find('span', class_='price-label')
+
+            if(len(price_div) > 1):
+                prices_label = price_div[1].find('span', class_='price-label')
+
             prices_old = 0
             if (prices_label != None):
-                prices_label = prices_label.get_text()
+                # prices_label = prices_label.get_text()
                 prices_old = price_div[1].find('span', class_='price-wrapper')['data-price-amount']
             else:
                 prices_old = prices_new
             if (prices_new_label != None):
                 prices_new_label = prices_new_label.get_text()
                 # prices_old = price_div[1].find('span', class_='price-wrapper')['data-price-amount']
-        except:
-            print(f'Error in extracting page data... Continuing...')
+        except Exception as e:
+            print(f'Exception class: {e.__class__}\nException occurred: {e}, passing...')
             pass
         # else:
         #     prices_old = prices_new
@@ -147,7 +151,7 @@ def get_page_data(url):
         if (prices_new_label != None):
             discount = (1 - prices_old / prices_new) * 100
         # print(prices_old)
-        print()
+        # print()
         json = {
             'Online_Grocery_Site': website,
             'Product_Category': category,
@@ -161,7 +165,7 @@ def get_page_data(url):
         }
         if(unit != ''):
             items.append(json)
-            print(f'JSON: {json}')
+            # print(f'JSON: {json}')
 
     next_url = calculate_page(url)
     if(next_url != None):
@@ -209,7 +213,7 @@ def write_to_csv(file_name, data):
 
 
 urls = get_child_urls_from_main_page_contents(base_url)
-print(f'URLS = {urls}')
+# print(f'URLS = {urls}')
 
 for url in urls:
     get_page_data(url + page_size)
