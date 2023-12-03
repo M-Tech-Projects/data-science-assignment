@@ -61,6 +61,8 @@ class NatureBasketCrawler:
         title = soup.title.string.lstrip().rstrip()
         title_arr = title.split('|')
         product_category = self.remove_special_chars(title_arr[0].lstrip().rstrip())
+        if(product_category == ''):
+            product_category = 'UNKNOWN'
         website = title_arr[1].lstrip().rstrip()
         if (~self.base_url.__contains__(website)):
             website = self.base_url[12:]
@@ -116,6 +118,7 @@ class NatureBasketCrawler:
                         'Weight': weight,
                         'Unit': unit,
                         'DayOfDeal': day,
+                        'Date': today_date,
                         'Original_Price': original_price,
                         'Discounted_Price': offer_price,
                         'Discount %': discount_percent
@@ -254,6 +257,8 @@ class KiranaMarketCrawler:
         # Example: Extract the title of the webpage
         title = soup.title.string
         category = title.split('-')[0]
+        if(category == ''):
+            category = 'UNKNOWN'
         website = title.split('|')[1].lstrip()
 
         # Content extraction for current page
@@ -486,18 +491,20 @@ class JioMartCrawler:
                 discount_percentage = match.group(5).strip()
                 website = 'jiomart.com'
                 titlename = title[0:22]
+                if(titlename == ''):
+                    titlename = 'UNKNOWN'
                 json = {
-                    'Online_Grocery_Site': website,
-                    'Product_Category': titlename,
-                    'Product_Name': product_name,
-                    'Weight': weight,
-                    'Unit': unit,
-                    'DayOfDeal': today_day,
-                    'Date': today_date,
-                    'Original_Price': original_price,
-                    'Discounted_Price': discounted_price,
-                    'Discount %': discount_percentage
-                }
+                        'Online_Grocery_Site': website,
+                        'Product_Category': titlename,
+                        'Product_Name': product_name,
+                        'Weight': weight,
+                        'Unit': unit,
+                        'DayOfDeal': today_day,
+                        'Date': today_date,
+                        'Original_Price': original_price,
+                        'Discounted_Price': discounted_price,
+                        'Discount %': discount_percentage
+                    }
                 parsed_data.append(json)
         return(parsed_data)
 
@@ -636,7 +643,8 @@ class DatabaseUtil:
 
         for i in range(0, size):
             row_id = uuid.uuid5(uuid.uuid5(uuid.uuid5(uuid.uuid4(), (web_data[i])), name_data[i]), name_data[i])
-            values = f'(\'{row_id}\', \'{self.remove_special_chars(web_data[i])}\', \'{self.remove_special_chars(category_data[i])}\', ' \
+            # values = f'(\'{row_id}\', \'{self.remove_special_chars(web_data[i])}\', \'{self.remove_special_chars(category_data[i])}\', ' \
+            values = f'(\'{row_id}\', \'{self.remove_special_chars(web_data[i])}\', \'{(category_data[i])}\', ' \
                      f'\'{self.remove_special_chars(name_data[i])}\', {weight_data[i]}, \'{unit_data[i]}\', ' \
                      f'\'{dod_data[i]}\', \'{date_data[i]}\', {mrp_data[i]}, {offer_data[i]}, {discount_data[i]});'
 
@@ -650,8 +658,11 @@ class DatabaseUtil:
                 pass
 
     def remove_special_chars(self, string):
-        return string \
-            .replace('\'', '_')
+        if('\'' in string):
+            return string \
+                .replace('\'', '_')
+        else:
+            return string
 
     def process_db(self):
         df = pd.read_csv(processed_dir + processed_file_name)
